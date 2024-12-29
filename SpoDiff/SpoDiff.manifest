@@ -1,0 +1,13 @@
+{
+	"autodeskProduct":	"Fusion",
+	"type":	"addin",
+	"id":	"3e5a858d-285e-4f7f-a5ad-1672abab4ba8",
+	"author":	"kantoku",
+	"description":	{
+		"":	""
+	},
+	"version":	"0.0.1",
+	"runOnStartup":	false,
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true
+}

@@ -17,6 +17,7 @@ _cmdInfo = {
     "id": "kantoku_3d_spot_diff",
     "name": "スポディフ",
     "tooltip": "3D間違い探しを解くよ!",
+    "resources": "resources",
     "WorkSpaceId": "FusionSolidEnvironment",
     "panelId": "InspectPanel",
 }
@@ -49,6 +50,7 @@ def run(context):
             _cmdInfo["id"],
             _cmdInfo["name"],
             _cmdInfo["tooltip"],
+            _cmdInfo["resources"],
         )
 
         # コマンドクリエイトイベント

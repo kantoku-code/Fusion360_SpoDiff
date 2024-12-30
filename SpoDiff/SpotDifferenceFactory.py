@@ -79,13 +79,24 @@ class SpotDifferenceFactory():
         """
         差分面作成
         """
-        create_clone_face(self.diffFaces1, self.bodyA)
-        create_clone_face(self.diffFaces2, self.bodyB)
+        try:
+            colorRed: core.Appearance = get_color_appearance(
+                "spoRed", [255,0,0]
+            )
+            create_clone_face(self.diffFaces1, self.bodyA, colorRed)
+
+            colorBlue: core.Appearance = get_color_appearance(
+                "spoBlue", [0,0,255]
+            )
+            create_clone_face(self.diffFaces2, self.bodyB, colorBlue)
+        except:
+            core.Application.get().log('Failed:\n{}'.format(traceback.format_exc()))
 
 
 def create_clone_face(
         faces: list[fusion.BRepFace],
-        body: fusion.BRepBody,):
+        body: fusion.BRepBody,
+        appe: core.Appearance,):
 
     if len(faces) < 1: return
 
@@ -106,7 +117,7 @@ def create_clone_face(
             try:
                 f = tmpMgr.copy(f)
                 tmpMgr.transform(f, mat)
-                res = tmpMgr.booleanOperation(
+                tmpMgr.booleanOperation(
                     baseBody,
                     f,
                     fusion.BooleanTypes.UnionBooleanType,
@@ -131,10 +142,68 @@ def create_clone_face(
             pass
         finally:
             baseFeat.finishEdit()
-            baseFeat.bodies[0].name = f"{body.name}_UnmatchedFace"
+            resBody = baseFeat.bodies[0]
     else:
         resBody = bodies.add(baseBody)
-        resBody.name = f"{body.name}_UnmatchedFace"
+
+    resBody.name = f"{body.name}_UnmatchedFace"
+    if appe:
+        resBody.appearance = appe
+
+
+def get_color_appearance(
+        name: str,
+        rgb: list[int],) -> core.Appearance:
+
+    app: core.Application = core.Application.get()
+    des: fusion.Design = fusion.Design.cast(
+        app.activeProduct
+    )
+    if not des: return None
+
+    try:
+        appe: core.Appearance = des.appearances.itemByName(name)
+    except:
+        pass
+
+    test1 = [x for x in app.materialLibraries]
+
+    if not appe:
+        # fusionMaterials = app.materialLibraries.itemByName(
+        #     "Fusion Appearance Library"
+        # )
+        fusionMaterials = app.materialLibraries.itemById(
+            "BA5EE55E-9982-449B-9D66-9F036540E140"
+        )
+
+        test2 = [x for x in fusionMaterials.appearances]
+        # for x in fusionMaterials.appearances:
+        #     try:
+        #         # colorProp = x.appearanceProperties.itemByName("Color")
+        #         colorProp = x.appearanceProperties.itemById("opaque_albedo")
+        #     except:
+        #         pass
+        #     if colorProp:
+        #         print(f"{x.name} - {x.id}")
+        #         yellowColor = x
+        #         break
+        # if not colorProp: return None
+
+        # yellowColor = fusionMaterials.appearances.itemByName(
+        #     "Paint - Enamel Glossy (Yellow)"
+        # )
+        yellowColor = fusionMaterials.appearances.itemById(
+            "Prism-095"
+        )
+
+        appe = des.appearances.addByCopy(yellowColor, name)
+                    
+        colorProp = core.ColorProperty.cast(
+            appe.appearanceProperties.itemById("opaque_albedo")
+        )
+        colorProp.value = core.Color.create(*rgb, 0)
+
+    return appe
 
 
 def refresh_display():
@@ -226,12 +295,6 @@ def get_matrix(
     mat2_1: core.Matrix3D = mat2.copy()
     mat2_1.invert()
     mat2_1.transformBy(mat1)
-
-    # dump_mat(mat1)
-    # print("***")
-    # dump_mat(mat1)
-    # print("***")
-    # dump_mat(mat2_1)
 
     return mat1, mat2, mat2_1
 

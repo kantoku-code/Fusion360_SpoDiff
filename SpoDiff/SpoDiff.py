@@ -24,7 +24,9 @@ _cmdInfo = {
 
 _selBodiesIpt: core.SelectionCommandInput = None
 _txtBodiesInfo: core.TextBoxCommandInput = None
+_previewIpt: core.BoolValueCommandInput = None
 _spotFact: SpotDifferenceFactory = None
+
 
 def run(context):
     ui = None
@@ -73,7 +75,7 @@ def run(context):
             cmdDef
         )
 
-        cmdControl.isVisible = True             
+        cmdControl.isVisible = True
 
     except:
         if _ui:
@@ -100,13 +102,13 @@ class CommandCreatedHandler(core.CommandCreatedEventHandler):
             # inputs
             inputs: core.CommandInputs = cmd.commandInputs
 
-            inputs.addTextBoxCommandInput(
-                "txtId",
-                "",
-                "違いを調べたいボディを２個選んでね",
-                1,
-                True,
-            )
+            # inputs.addTextBoxCommandInput(
+            #     "txtId",
+            #     "",
+            #     "違いを調べたいボディを２個選んでね",
+            #     1,
+            #     True,
+            # )
 
             global _selBodiesIpt
             _selBodiesIpt = inputs.addSelectionInput(
@@ -116,6 +118,16 @@ class CommandCreatedHandler(core.CommandCreatedEventHandler):
             )
             _selBodiesIpt.addSelectionFilter(core.SelectionCommandInput.Bodies)
             _selBodiesIpt.setSelectionLimits(2,2)
+
+            global _previewIpt
+            _previewIpt = inputs.addBoolValueInput(
+                "previewIptId",
+                "確認",
+                False,
+                _cmdInfo["resources"],
+                False,
+            )
+            _previewIpt.isEnabled = False
 
             global _txtBodiesInfo
             _txtBodiesInfo = inputs.addTextBoxCommandInput(
@@ -146,20 +158,35 @@ class MyInputChangedHandler(core.InputChangedEventHandler):
         super().__init__()
     def notify(self, args: core.InputChangedEventArgs):
         global _selBodiesIpt
-        if not args.input == _selBodiesIpt: return
-
         global _txtBodiesInfo
-        if not _selBodiesIpt.selectionCount == 2:
-            _txtBodiesInfo.text = "-"
-            return
-
+        global _previewIpt
         global _spotFact
-        _spotFact = SpotDifferenceFactory(
-            _selBodiesIpt.selection(0).entity,
-            _selBodiesIpt.selection(1).entity,
-        )
-        
-        _txtBodiesInfo.text = _spotFact.get_bodies_info()
+
+        if args.input == _selBodiesIpt:
+            if not _selBodiesIpt.selectionCount == 2:
+                _txtBodiesInfo.text = "-"
+
+                _previewIpt.isEnabled = False
+            else:
+                _spotFact = SpotDifferenceFactory(
+                    _selBodiesIpt.selection(0).entity,
+                    _selBodiesIpt.selection(1).entity,
+                )
+                _txtBodiesInfo.text = _spotFact.get_bodies_info()
+
+                _previewIpt.isEnabled = True
+
+        if args.input == _previewIpt:
+            _txtBodiesInfo.text = _spotFact.get_diff_info()
+        #     if not _selBodiesIpt.selectionCount == 2:
+        #         _txtBodiesInfo.text = "-"
+        #     else:
+        #         global _spotFact
+        #         _spotFact = SpotDifferenceFactory(
+        #             _selBodiesIpt.selection(0).entity,
+        #             _selBodiesIpt.selection(1).entity,
+        #         )
+        #         _txtBodiesInfo.text = _spotFact.get_bodies_info()
 
 
 def stop(context):

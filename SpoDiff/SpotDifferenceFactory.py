@@ -23,6 +23,7 @@ class SpotDifferenceFactory():
         # fusion.Component.toOcc = to_occurrenc
         # fusion.Component.activate = comp_activate
 
+
     def get_bodies_info(self) -> str:
 
         msg = "Bodyが２個設定されていません"
@@ -39,19 +40,32 @@ class SpotDifferenceFactory():
             self.ui.messageBox(msg)
             return ""
 
-        # コンポーネントの位置
-        mat1a, mat2a, mat2_1 = get_matrix(
-            self.bodyA,
-            self.bodyB,
+        return "\n".join(
+            [
+                f"{self.bodyA.name} - {self.bodyA.faces.count}枚",
+                f"{self.bodyB.name} - {self.bodyB.faces.count}枚",
+            ]
         )
 
-        # 異なる面取得
-        self.diffFaces1, self.diffFaces2 = get_unmatched_faces(
-            self.bodyA,
-            self.bodyB,
-            mat2_1,
-            0.001
-        )
+
+    def get_diff_info(self) -> str:
+
+        msg = "Bodyが２個設定されていません"
+        if not self.bodyA:
+            self.ui.messageBox(msg)
+            return ""
+
+        if not self.bodyB:
+            self.ui.messageBox(msg)
+            return ""
+
+        msg = "２個のボディが同じです"
+        if self.bodyA == self.bodyB:
+            self.ui.messageBox(msg)
+            return ""
+
+        if not self.diffFaces1 or not self.diffFaces2:
+            self.set_diff_faces()
 
         hit1 = len(self.diffFaces1)
         hit2 = len(self.diffFaces2)
@@ -75,11 +89,30 @@ class SpotDifferenceFactory():
             return msg
 
 
+    def set_diff_faces(self):
+        # コンポーネントの位置
+        mat1a, mat2a, mat2_1 = get_matrix(
+            self.bodyA,
+            self.bodyB,
+        )
+
+        # 異なる面取得
+        self.diffFaces1, self.diffFaces2 = get_unmatched_faces(
+            self.bodyA,
+            self.bodyB,
+            mat2_1,
+            0.001
+        )
+
+
     def create_diff_faces(self):
         """
         差分面作成
         """
         try:
+            if not self.diffFaces1 or not self.diffFaces2:
+                self.set_diff_faces()
+
             colorRed: core.Appearance = get_color_appearance(
                 "spoRed", [255,0,0]
             )
